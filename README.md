@@ -1,0 +1,1 @@
+This bot buy or sell on multiversx blockchain when a price meet some value defined
