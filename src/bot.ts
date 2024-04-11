@@ -198,8 +198,8 @@ const main = async ({
 main({
   lpAddress: "erd1qqqqqqqqqqqqqpgqyx43t88dek9yr4889ykzx0wuz3kfwd4a2jps9xnxhm",
 
-  buy: {
-    amount: 0.0001,
-    price: 0.000265,
+  sell: {
+    amount: 431845,
+    price: 0.000345,
   },
 });
