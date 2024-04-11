@@ -63,6 +63,9 @@ const main = async ({
       console.log(`Pair: ${pair.firstToken.ticker}/${pair.secondToken.ticker}`);
 
       if (buy) {
+        console.log(
+          `${pair.firstToken.ticker} price: ${pair.firstToken.price}`
+        );
         if (Number(pair.firstToken.price) <= buy.price) {
           console.log(
             `The bot will try to buy with ${buy.amount} ${pair.secondToken.ticker}`
@@ -197,6 +200,6 @@ main({
 
   buy: {
     amount: 0.0001,
-    price: 0.000262,
+    price: 0.000265,
   },
 });
