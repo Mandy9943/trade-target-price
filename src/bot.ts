@@ -52,138 +52,144 @@ const main = async ({
 
   let finish = false;
 
-  while (!finish) {
-    const pair = await retryAsyncFunction(fetchXechangePair, [lpAddress]);
+  try {
+    while (!finish) {
+      const pair = await retryAsyncFunction(fetchXechangePair, [lpAddress]);
 
-    if (!pair) {
-      throw new Error("This pool address is not valid");
-    }
+      if (!pair) {
+        throw new Error("This pool address is not valid");
+      }
 
-    console.log(`Pair: ${pair.firstToken.ticker}/${pair.secondToken.ticker}`);
+      console.log(`Pair: ${pair.firstToken.ticker}/${pair.secondToken.ticker}`);
 
-    if (buy) {
-      if (Number(pair.firstToken.price) <= buy.price) {
-        console.log(
-          `The bot will try to buy with ${buy.amount} ${pair.secondToken.ticker}`
-        );
-
-        let tokenBalance;
-        try {
-          tokenBalance = await retryAsyncFunction(fetchTokenBalanceByAccount, [
-            pair.secondToken.identifier,
-            walletAddress,
-          ]);
-        } catch (error) {}
-
-        if (!tokenBalance) {
-          console.error(
-            `You don't have any ${pair.secondToken.ticker} token for buying`
+      if (buy) {
+        if (Number(pair.firstToken.price) <= buy.price) {
+          console.log(
+            `The bot will try to buy with ${buy.amount} ${pair.secondToken.ticker}`
           );
-          return;
-        }
-        console.log(
-          `Balance: ${new BigNumber(tokenBalance.balance)
-            .div(10 ** tokenBalance.decimals)
-            .toNumber()
-            .toLocaleString()} ${tokenBalance.ticker}`
-        );
 
-        if (
-          BigNumber(tokenBalance.balance).isLessThan(
-            new BigNumber(buy.amount).times(10 ** pair.secondToken.decimals)
-          )
-        ) {
-          console.error(
-            `You don't have enough ${
-              pair.secondToken.ticker
-            } token for buying, required ${buy.amount} ${
-              pair.secondToken.ticker
-            } token and you have ${new BigNumber(
-              tokenBalance.balance
-            ).dividedBy(10 ** pair.firstToken.decimals)} ${
-              pair.firstToken.ticker
-            } token`
+          let tokenBalance;
+          try {
+            tokenBalance = await retryAsyncFunction(
+              fetchTokenBalanceByAccount,
+              [pair.secondToken.identifier, walletAddress]
+            );
+          } catch (error) {}
+
+          if (!tokenBalance) {
+            console.error(
+              `You don't have any ${pair.secondToken.ticker} token for buying`
+            );
+            return;
+          }
+          console.log(
+            `Balance: ${new BigNumber(tokenBalance.balance)
+              .div(10 ** tokenBalance.decimals)
+              .toNumber()
+              .toLocaleString()} ${tokenBalance.ticker}`
           );
-          return;
-        }
 
-        console.log("executing transaction");
+          if (
+            BigNumber(tokenBalance.balance).isLessThan(
+              new BigNumber(buy.amount).times(10 ** pair.secondToken.decimals)
+            )
+          ) {
+            console.error(
+              `You don't have enough ${
+                pair.secondToken.ticker
+              } token for buying, required ${buy.amount} ${
+                pair.secondToken.ticker
+              } token and you have ${new BigNumber(
+                tokenBalance.balance
+              ).dividedBy(10 ** pair.firstToken.decimals)} ${
+                pair.firstToken.ticker
+              } token`
+            );
+            return;
+          }
 
-        const buyResult = await buyToken(pair, buy.amount);
+          console.log("executing transaction");
 
-        console.log("transaction success ");
+          const buyResult = await buyToken(pair, buy.amount);
 
-        const tx = await fetchTransactionByHash(buyResult.hash);
-        finish = true;
-        if (tx) {
-          const message = formatTextTx(tx);
-          console.log(message);
+          console.log("transaction success ");
+
+          const tx = await fetchTransactionByHash(buyResult.hash);
+          finish = true;
+          if (tx) {
+            const message = formatTextTx(tx);
+            console.log(message);
+          }
         }
       }
-    }
 
-    if (sell) {
-      console.log(
-        `The bot will try to sell ${sell.amount} ${pair.firstToken.ticker}`
-      );
-
-      if (Number(pair.firstToken.price) >= sell.price) {
-        const tokenBalance = await retryAsyncFunction(
-          fetchTokenBalanceByAccount,
-          [pair.firstToken.identifier, walletAddress]
-        );
-
-        if (!tokenBalance) {
-          console.error(
-            `You don't have any ${pair.firstToken.ticker} token for selling`
-          );
-          return;
-        }
+      if (sell) {
         console.log(
-          `Balance: ${new BigNumber(tokenBalance.balance)
-            .div(10 ** tokenBalance.decimals)
-            .toNumber()
-            .toLocaleString()} ${tokenBalance.ticker}`
+          `The bot will try to sell ${sell.amount} ${pair.firstToken.ticker}`
         );
 
-        if (
-          BigNumber(tokenBalance.balance).isLessThan(
-            new BigNumber(sell.amount).times(10 ** pair.firstToken.decimals)
-          )
-        ) {
-          console.error(
-            `You don't have enough ${
-              pair.firstToken.ticker
-            } token for selling, required ${sell.amount} ${
-              pair.firstToken.ticker
-            } token and you have ${new BigNumber(
-              tokenBalance.balance
-            ).dividedBy(10 ** pair.firstToken.decimals)} ${
-              pair.firstToken.ticker
-            } token`
+        if (Number(pair.firstToken.price) >= sell.price) {
+          const tokenBalance = await retryAsyncFunction(
+            fetchTokenBalanceByAccount,
+            [pair.firstToken.identifier, walletAddress]
           );
-          return;
-        }
-        console.log("executing transaction");
 
-        const sellResult = await sellToken(pair, sell.amount);
-        console.log("transaction success");
+          if (!tokenBalance) {
+            console.error(
+              `You don't have any ${pair.firstToken.ticker} token for selling`
+            );
+            return;
+          }
+          console.log(
+            `Balance: ${new BigNumber(tokenBalance.balance)
+              .div(10 ** tokenBalance.decimals)
+              .toNumber()
+              .toLocaleString()} ${tokenBalance.ticker}`
+          );
 
-        const tx = await fetchTransactionByHash(sellResult.hash);
+          if (
+            BigNumber(tokenBalance.balance).isLessThan(
+              new BigNumber(sell.amount).times(10 ** pair.firstToken.decimals)
+            )
+          ) {
+            console.error(
+              `You don't have enough ${
+                pair.firstToken.ticker
+              } token for selling, required ${sell.amount} ${
+                pair.firstToken.ticker
+              } token and you have ${new BigNumber(
+                tokenBalance.balance
+              ).dividedBy(10 ** pair.firstToken.decimals)} ${
+                pair.firstToken.ticker
+              } token`
+            );
+            return;
+          }
+          console.log("executing transaction");
 
-        finish = true;
-        if (tx) {
-          const message = formatTextTx(tx);
-          console.log(message);
-          bot.sendMessage(config.telegramChatIds[0], message);
+          const sellResult = await sellToken(pair, sell.amount);
+          console.log("transaction success");
+
+          const tx = await fetchTransactionByHash(sellResult.hash);
+
+          finish = true;
+          if (tx) {
+            const message = formatTextTx(tx);
+            console.log(message);
+            bot.sendMessage(config.telegramChatIds[0], message);
+          }
         }
       }
-    }
 
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+    console.log("Operation finalized");
+  } catch (error: any) {
+    bot.sendMediaGroup(
+      config.telegramChatIds[0],
+      error?.message || "Critical error"
+    );
   }
-
-  console.log("Operation finalized");
 };
 
 main({
